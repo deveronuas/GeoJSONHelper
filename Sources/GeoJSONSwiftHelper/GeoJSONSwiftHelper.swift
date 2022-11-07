@@ -197,7 +197,7 @@ extension GeoJSONObject {
   }
 }
 
-struct CoordinateBounds {
+public struct CoordinateBounds {
   let southwest: CLLocationCoordinate2D
   let northeast: CLLocationCoordinate2D
 

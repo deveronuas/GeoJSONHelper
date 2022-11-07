@@ -1,5 +1,5 @@
 import XCTest
-@testable import GeoJSONHelper
+@testable import GeoJSONSwiftHelper
 
 final class GeoJSONHelperTests: XCTestCase {
     func testExample() throws {

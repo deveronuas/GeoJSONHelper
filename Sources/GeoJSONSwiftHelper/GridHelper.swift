@@ -7,7 +7,7 @@ import GEOSwift
 public struct GridHelper {
   typealias LineCoordinates = (start: CLLocationCoordinate2D, end: CLLocationCoordinate2D)
 
-  static func calcGridLines(bounds: CoordinateBounds, center: CLLocationCoordinate2D, rotationDegrees: Double, offset: SizeInMeters, acreInMeters: Double) -> [GridLineOverlay] {
+  public static func calcGridLines(bounds: CoordinateBounds, center: CLLocationCoordinate2D, rotationDegrees: Double, offset: SizeInMeters, acreInMeters: Double) -> [GridLineOverlay] {
     var hLines : [GridLineOverlay] = []
     var vLines : [GridLineOverlay] = []
 
@@ -59,7 +59,7 @@ public struct GridHelper {
     return [vLines.sorted(), hLines.sorted()].flatMap({ $0 })
   }
 
-  static func calcGridPolygons(bounds: CoordinateBounds, center: CLLocationCoordinate2D, rotationDegrees: Double, offset: SizeInMeters, acreInMeters: Double) -> [GridPolygonOverlay] {
+  public static func calcGridPolygons(bounds: CoordinateBounds, center: CLLocationCoordinate2D, rotationDegrees: Double, offset: SizeInMeters, acreInMeters: Double) -> [GridPolygonOverlay] {
     var polygons : [GridPolygonOverlay] = []
 
     let origin = center.movedBy(latitudinalMeters: offset.height, longitudinalMeters: offset.width)
@@ -149,7 +149,7 @@ public struct GridHelper {
     return polygons
   }
 
-  static private func buildPolygon(origin: CLLocationCoordinate2D, vMvmt: Double, hMvmt: Double, vLineMvmtDirection: Double, hLineMvmtDirection: Double, acreInMeters: Double) -> GridPolygonOverlay {
+   static private func buildPolygon(origin: CLLocationCoordinate2D, vMvmt: Double, hMvmt: Double, vLineMvmtDirection: Double, hLineMvmtDirection: Double, acreInMeters: Double) -> GridPolygonOverlay {
     let tl = origin.movedBy(distanceMeters: vMvmt,
                             bearingRadians: hLineMvmtDirection)
       .movedBy(distanceMeters: hMvmt,
@@ -166,8 +166,8 @@ public struct GridHelper {
     return GridPolygonOverlay.create(coords)
   }
 
-  class GridPolygonOverlay: MKPolygon, Identifiable, Comparable {
-    let id = UUID()
+  public class GridPolygonOverlay: MKPolygon, Identifiable, Comparable {
+    public let id = UUID()
     let isGrid = true
 
     var boundary: Turf.Polygon? = nil
@@ -177,18 +177,18 @@ public struct GridHelper {
       selected ? 1 : 0
     }
 
-    static func create(_ coords: [CLLocationCoordinate2D], selected: Bool = false) -> GridPolygonOverlay {
+    public static func create(_ coords: [CLLocationCoordinate2D], selected: Bool = false) -> GridPolygonOverlay {
       let polygon = GridPolygonOverlay(coordinates: coords, count: coords.count)
       polygon.selected = selected
       polygon.boundary = Turf.Polygon([coords])
       return polygon
     }
 
-    static func < (lhs: GridHelper.GridPolygonOverlay, rhs: GridHelper.GridPolygonOverlay) -> Bool {
+    public static func < (lhs: GridHelper.GridPolygonOverlay, rhs: GridHelper.GridPolygonOverlay) -> Bool {
       lhs.coordinate < rhs.coordinate
     }
 
-    static func == (lhs: GridHelper.GridPolygonOverlay, rhs: GridHelper.GridPolygonOverlay) -> Bool {
+    public static func == (lhs: GridHelper.GridPolygonOverlay, rhs: GridHelper.GridPolygonOverlay) -> Bool {
       lhs.coordinate == rhs.coordinate && lhs.selected == rhs.selected
     }
 
@@ -197,7 +197,7 @@ public struct GridHelper {
     /// 1. Convert boundary and cell polygon to GEOSwift Geometries
     /// 2. Find intersection
     /// 3. Convert intercetion to a GridPolygonOverlay
-    func intersection(with boundaryGeoJSON: String) -> GridPolygonOverlay? {
+    public func intersection(with boundaryGeoJSON: String) -> GridPolygonOverlay? {
       let jsonDecoder = JSONDecoder()
       let jsonEncoder = JSONEncoder()
 
@@ -251,10 +251,10 @@ public struct GridHelper {
     }
   }
 
-  class GridLineOverlay: MKPolyline, Comparable {
+  public class GridLineOverlay: MKPolyline, Comparable {
     let isGrid = true
 
-    static func < (lhs: GridHelper.GridLineOverlay, rhs: GridHelper.GridLineOverlay) -> Bool {
+    public static func < (lhs: GridHelper.GridLineOverlay, rhs: GridHelper.GridLineOverlay) -> Bool {
       lhs.coordinate < rhs.coordinate
     }
   }
