@@ -6,7 +6,7 @@ import MapKit
 public class BoundaryPolygon: MKPolygon {}
 
 extension GeoJSONObject {
- public static func create(from geoJSONString: String) -> GeoJSONObject? {
+  public static func create(from geoJSONString: String) -> GeoJSONObject? {
     guard let data = geoJSONString.data(using: .utf8) else { return nil }
 
     do {
@@ -19,7 +19,7 @@ extension GeoJSONObject {
     return nil
   }
 
- public var coordinates: [CLLocationCoordinate2D] {
+  public var coordinates: [CLLocationCoordinate2D] {
     switch self {
     case .geometry(let geometry):
       return getCoordinates(from: geometry)
@@ -117,20 +117,62 @@ extension GeoJSONObject {
       if coordinate.longitude <= maxW || maxW == 0 { maxW = coordinate.longitude }
     }
 
-    let offset = 0.001
-    let maxNE = CLLocationCoordinate2D(latitude: maxN + offset, longitude: maxE + offset)
-    let maxSW =  CLLocationCoordinate2D(latitude: maxS - offset, longitude: maxW - offset)
-    let bounds = CoordinateBounds(southwest: maxSW, northeast: maxNE)
+    let maxNE = CLLocationCoordinate2D(latitude: maxN,
+                                       longitude: maxE)
+    let maxSW =  CLLocationCoordinate2D(latitude: maxS,
+                                        longitude: maxW)
+    let bounds = CoordinateBounds(southwest: maxSW,
+                                  northeast: maxNE)
     return bounds
   }
 
- public var region: MKCoordinateRegion? {
-    return MKCoordinateRegion(coordinates: [bounds.northwest, bounds.southeast])
+  private func bounds(topOffset: Double,
+                      bottomOffset: Double,
+                      leftoffset: Double,
+                      rightOffset: Double) -> CoordinateBounds {
+    var maxN = CLLocationDegrees(),
+        maxS = CLLocationDegrees(),
+        maxE = CLLocationDegrees(),
+        maxW = CLLocationDegrees()
+
+    for coordinate in coordinates {
+      if coordinate.latitude >= maxN || maxN == 0 { maxN = coordinate.latitude }
+      if coordinate.latitude <= maxS || maxS == 0 { maxS = coordinate.latitude }
+      if coordinate.longitude >= maxE || maxE == 0 { maxE = coordinate.longitude }
+      if coordinate.longitude <= maxW || maxW == 0 { maxW = coordinate.longitude }
+    }
+
+    let maxNE =
+    CLLocationCoordinate2D(latitude: maxN + leftoffset,
+                           longitude: maxE + topOffset)
+    let maxSW =
+    CLLocationCoordinate2D(latitude: maxS + rightOffset,
+                           longitude: maxW +  bottomOffset)
+    let bounds = CoordinateBounds(southwest: maxSW,
+                                  northeast: maxNE)
+    return bounds
+  }
+
+  public func region(topOffset: Double,
+                     bottomOffset: Double,
+                     leftoffset: Double,
+                     rightOffset: Double) -> MKCoordinateRegion? {
+    let boundsWithOffset = bounds(topOffset: topOffset,
+                                  bottomOffset: bottomOffset,
+                                  leftoffset: leftoffset,
+                                  rightOffset: rightOffset)
+
+
+    return MKCoordinateRegion(coordinates: [boundsWithOffset.northeast, boundsWithOffset.southwest])
+  }
+
+  public var region: MKCoordinateRegion? {
+    return MKCoordinateRegion(coordinates: [bounds.northeast, bounds.southwest])
     // This is too snug
     // return MKCoordinateRegion(coordinates: coordinates)
   }
 
- public var mapPolygons: [BoundaryPolygon]? {
+  public var mapPolygons: [BoundaryPolygon]? {
     return overlays.filter { overlay in
       overlay is BoundaryPolygon
     } as? [BoundaryPolygon]
@@ -346,7 +388,7 @@ extension MKCoordinateRegion {
 }
 
 extension CLLocationCoordinate2D {
- public func distance(from otherCoordinate: CLLocationCoordinate2D) -> Double {
+  public func distance(from otherCoordinate: CLLocationCoordinate2D) -> Double {
     let myLoc = CLLocation(latitude: self.latitude, longitude: self.longitude)
     let otherLoc = CLLocation(latitude: otherCoordinate.latitude, longitude: otherCoordinate.longitude)
 
