@@ -96,4 +96,9 @@ public struct MapCorners {
 public struct SizeInMeters {
   public let width: CLLocationDistance
   public let height: CLLocationDistance
+  
+  public init(width: CLLocationDistance, height: CLLocationDistance) {
+    self.width = width
+    self.height = height
+  }
 }
