@@ -4,7 +4,7 @@ import Turf
 import GEOSwift
 
 
-struct GridHelper {
+public struct GridHelper {
   typealias LineCoordinates = (start: CLLocationCoordinate2D, end: CLLocationCoordinate2D)
 
   static func calcGridLines(bounds: CoordinateBounds, center: CLLocationCoordinate2D, rotationDegrees: Double, offset: SizeInMeters, acreInMeters: Double) -> [GridLineOverlay] {
