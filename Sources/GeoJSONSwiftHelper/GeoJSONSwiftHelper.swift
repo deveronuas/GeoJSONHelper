@@ -143,11 +143,15 @@ extension GeoJSONObject {
     }
 
     let maxNE =
-    CLLocationCoordinate2D(latitude: maxN + leftoffset,
-                           longitude: maxE + topOffset)
+    CLLocationCoordinate2D(latitude: maxN,
+                           longitude: maxE)
+    .movedBy(latitudinalMeters: topOffset,
+             longitudinalMeters: leftoffset)
     let maxSW =
-    CLLocationCoordinate2D(latitude: maxS + rightOffset,
-                           longitude: maxW +  bottomOffset)
+    CLLocationCoordinate2D(latitude: maxS,
+                           longitude: maxW)
+    .movedBy(latitudinalMeters: bottomOffset,
+             longitudinalMeters: rightOffset)
     let bounds = CoordinateBounds(southwest: maxSW,
                                   northeast: maxNE)
     return bounds
