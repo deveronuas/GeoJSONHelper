@@ -4,15 +4,15 @@
 import PackageDescription
 
 let package = Package(
-  name: "GeoJSONHelper",
+  name: "GeoJSONSwiftHelper",
   platforms: [
     .iOS(.v15)
   ],
   products: [
     // Products define the executables and libraries a package produces, and make them visible to other packages.
     .library(
-      name: "GeoJSONHelper",
-      targets: ["GeoJSONHelper"]),
+      name: "GeoJSONSwiftHelper",
+      targets: ["GeoJSONSwiftHelper"]),
   ],
   dependencies: [
     // Dependencies declare other packages that this package depends on.
@@ -29,8 +29,8 @@ let package = Package(
         .product(name: "GEOSwift", package: "GEOSwift")
       ]),
     .testTarget(
-      name: "GeoJSONHelperTests",
-      dependencies: ["GeoJSONHelper",
+      name: "GeoJSONSwiftHelperTests",
+      dependencies: ["GeoJSONSwiftHelper",
                      .product(name: "Turf", package: "turf-swift"),
                      .product(name: "GEOSwift", package: "GEOSwift")
       ]),
