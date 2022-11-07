@@ -1,7 +1,7 @@
 import MapKit
 
 extension CLLocationCoordinate2D {
-  func movedBy(latitudinalMeters: CLLocationDistance, longitudinalMeters: CLLocationDistance) -> CLLocationCoordinate2D {
+  public func movedBy(latitudinalMeters: CLLocationDistance, longitudinalMeters: CLLocationDistance) -> CLLocationCoordinate2D {
     let region = MKCoordinateRegion(center: self, latitudinalMeters: abs(latitudinalMeters), longitudinalMeters: abs(longitudinalMeters))
 
     let latitudeDelta = region.span.latitudeDelta
@@ -18,7 +18,7 @@ extension CLLocationCoordinate2D {
     return newCoordinate
   }
 
-  func movedBy(distanceMeters: Double, bearingRadians: Double) -> CLLocationCoordinate2D {
+  public func movedBy(distanceMeters: Double, bearingRadians: Double) -> CLLocationCoordinate2D {
     let distRadians = distanceMeters / (6372797.6) // earth radius in meters
 
     let lat1 = self.latitude * Double.pi / 180
@@ -94,6 +94,6 @@ public struct MapCorners {
 
 /// Use this to capture size of a region in meters
 public struct SizeInMeters {
-  let width: CLLocationDistance
-  let height: CLLocationDistance
+  public let width: CLLocationDistance
+  public let height: CLLocationDistance
 }
