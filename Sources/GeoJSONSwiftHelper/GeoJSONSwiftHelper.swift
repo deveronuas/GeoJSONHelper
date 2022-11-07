@@ -3,10 +3,10 @@ import CoreLocation
 import Turf
 import MapKit
 
-class BoundaryPolygon: MKPolygon {}
+public class BoundaryPolygon: MKPolygon {}
 
 extension GeoJSONObject {
-  static func create(from geoJSONString: String) -> GeoJSONObject? {
+ public static func create(from geoJSONString: String) -> GeoJSONObject? {
     guard let data = geoJSONString.data(using: .utf8) else { return nil }
 
     do {
@@ -19,7 +19,7 @@ extension GeoJSONObject {
     return nil
   }
 
-  var coordinates: [CLLocationCoordinate2D] {
+ public var coordinates: [CLLocationCoordinate2D] {
     switch self {
     case .geometry(let geometry):
       return getCoordinates(from: geometry)
@@ -49,7 +49,7 @@ extension GeoJSONObject {
     }
   }
 
-  var polygons: [Turf.Polygon] {
+  public var polygons: [Turf.Polygon] {
     switch self {
     case .geometry(let geometry):
       return getPolygons(from: geometry)
@@ -79,7 +79,7 @@ extension GeoJSONObject {
     }
   }
 
-  var center: CLLocationCoordinate2D {
+  public var center: CLLocationCoordinate2D {
     var maxLatitude: Double = -200
     var maxLongitude: Double = -200
     var minLatitude: Double = Double(MAXFLOAT)
@@ -108,7 +108,7 @@ extension GeoJSONObject {
       CLLocationDegrees((maxLongitude + minLongitude) * 0.5))
   }
 
-  var bounds: CoordinateBounds {
+  public var bounds: CoordinateBounds {
     var maxN = CLLocationDegrees(), maxS = CLLocationDegrees(), maxE = CLLocationDegrees(), maxW = CLLocationDegrees()
     for coordinate in coordinates {
       if coordinate.latitude >= maxN || maxN == 0 { maxN = coordinate.latitude }
@@ -124,19 +124,19 @@ extension GeoJSONObject {
     return bounds
   }
 
-  var region: MKCoordinateRegion? {
+ public var region: MKCoordinateRegion? {
     return MKCoordinateRegion(coordinates: [bounds.northwest, bounds.southeast])
     // This is too snug
     // return MKCoordinateRegion(coordinates: coordinates)
   }
 
-  var mapPolygons: [BoundaryPolygon]? {
+ public var mapPolygons: [BoundaryPolygon]? {
     return overlays.filter { overlay in
       overlay is BoundaryPolygon
     } as? [BoundaryPolygon]
   }
 
-  var overlays: [MKOverlay] {
+  public var overlays: [MKOverlay] {
     switch self {
     case .geometry(let geometry):
       return getOverlays(from: geometry)
@@ -346,7 +346,7 @@ extension MKCoordinateRegion {
 }
 
 extension CLLocationCoordinate2D {
-  func distance(from otherCoordinate: CLLocationCoordinate2D) -> Double {
+ public func distance(from otherCoordinate: CLLocationCoordinate2D) -> Double {
     let myLoc = CLLocation(latitude: self.latitude, longitude: self.longitude)
     let otherLoc = CLLocation(latitude: otherCoordinate.latitude, longitude: otherCoordinate.longitude)
 
