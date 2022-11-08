@@ -173,8 +173,23 @@ public struct GridHelper {
     var boundary: Turf.Polygon? = nil
     var selected = false
 
-    var opacity : Double {
+    var opacity: Double {
       selected ? 1 : 0
+    }
+
+    var geoJSON: String {
+      guard let boundary = boundary else { return "" }
+
+      let geoObj = Turf.Geometry(boundary)
+      var feature = Turf.Feature(geometry: geoObj)
+      feature.properties = JSONObject(rawValue: ["id": id.uuidString])
+
+      if let geoData = try? JSONEncoder().encode(feature),
+         let geoString = String(data: geoData, encoding: .utf8) {
+        return geoString
+      }
+
+      return ""
     }
 
     public static func create(_ coords: [CLLocationCoordinate2D], selected: Bool = false) -> GridPolygonOverlay {
