@@ -7,17 +7,29 @@ import GEOSwift
 public struct GridHelper {
   typealias LineCoordinates = (start: CLLocationCoordinate2D, end: CLLocationCoordinate2D)
 
-  public static func calcGridLines(bounds: CoordinateBounds, center: CLLocationCoordinate2D, rotationDegrees: Double, offset: SizeInMeters, acreInMeters: Double) -> [GridLineOverlay] {
+  /// This method will calculate the horizontal and verticle grid lines from the overlay's center to the overlay's bound with the provided rotation and offset.
+  /// - Parameters:
+  ///     - bounds: The overlay's bounding rectangle.
+  ///     - center: The overlay's center.
+  ///     - rotation: Rotaion should be in degrees and it rotates the grid line as per the provided rotation.
+  ///     - offset: Offset should be in SizeInMeters and it moves the grid line as per the provided offset.
+  ///     - gridCellSize: GridCellSize should be in meters and it is the distance between two grid line.
+  /// - Returns: The array of GridLineOverlay.
+  public static func calcGridLines(bounds: CoordinateBounds,
+                                   center: CLLocationCoordinate2D,
+                                   rotation: Double,
+                                   offset: SizeInMeters,
+                                   gridCellSize: Double) -> [GridLineOverlay] {
     var hLines : [GridLineOverlay] = []
     var vLines : [GridLineOverlay] = []
 
     let origin = center.movedBy(latitudinalMeters: offset.height, longitudinalMeters: offset.width)
     let gridSize = bounds.northwest.distance(from: bounds.southeast)
-    var numOfLines = Int(ceil(gridSize / acreInMeters))
+    var numOfLines = Int(ceil(gridSize / gridCellSize))
     numOfLines = numOfLines % 2 == 0 ? numOfLines : numOfLines + 1
-    let lineLength = Double(numOfLines) * acreInMeters
+    let lineLength = Double(numOfLines) * gridCellSize
 
-    let rotationRadians = (rotationDegrees * Double.pi / 180)
+    let rotationRadians = (rotation * Double.pi / 180)
     let vLineMvmtDirection = (Double.pi / 2.0) + rotationRadians
     let hLineMvmtDirection = (Double.pi) + rotationRadians
 
@@ -33,7 +45,7 @@ public struct GridHelper {
 
     // Fill the bounds
     for num in 1...Int(numOfLines / 2) {
-      let mvmt = acreInMeters * Double(num)
+      let mvmt = gridCellSize * Double(num)
 
       // Vertical lines
       let vNegLineStart = originVLineStart.movedBy(distanceMeters: -mvmt, bearingRadians: vLineMvmtDirection)
@@ -59,22 +71,34 @@ public struct GridHelper {
     return [vLines.sorted(), hLines.sorted()].flatMap({ $0 })
   }
 
-  public static func calcGridPolygons(bounds: CoordinateBounds, center: CLLocationCoordinate2D, rotationDegrees: Double, offset: SizeInMeters, acreInMeters: Double) -> [GridPolygonOverlay] {
+  /// This method will calculate the grid polygons from the overlay's center to the overlay's bound with the provided rotation and offset.
+  /// - Parameters:
+  ///     - bounds: The overlay's bounding rectangle.
+  ///     - center: The overlay's center.
+  ///     - rotation: Rotaion should be in degrees and it rotates the grid polygon as per the provided rotation.
+  ///     - offset: Offset should be in SizeInMeters and it moves the grid polygon as per the provided offset.
+  ///     - gridCellSize: GridCellSize should be in meters and it is the distance between two grid line.
+  /// - Returns: The array of GridPolygonOverlay.
+  public static func calcGridPolygons(bounds: CoordinateBounds,
+                                      center: CLLocationCoordinate2D,
+                                      rotation: Double,
+                                      offset: SizeInMeters,
+                                      gridCellSize: Double) -> [GridPolygonOverlay] {
     var polygons : [GridPolygonOverlay] = []
 
     let origin = center.movedBy(latitudinalMeters: offset.height, longitudinalMeters: offset.width)
     let gridSize = bounds.northwest.distance(from: bounds.southeast)
-    var numOfLines = Int(ceil(gridSize / acreInMeters))
+    var numOfLines = Int(ceil(gridSize / gridCellSize))
     numOfLines = numOfLines % 2 == 0 ? numOfLines : numOfLines + 1
 
-    let rotationRadians = (rotationDegrees * Double.pi / 180)
+    let rotationRadians = (rotation * Double.pi / 180)
     let vLineMvmtDirection = (Double.pi / 2.0) + rotationRadians
     let hLineMvmtDirection = (Double.pi) + rotationRadians
 
     for vIndex in 0...Int(numOfLines / 2) {
       for hIndex in 0...Int(numOfLines / 2) {
-        let vMvmt = acreInMeters * Double(vIndex)
-        let hMvmt = acreInMeters * Double(hIndex)
+        let vMvmt = gridCellSize * Double(vIndex)
+        let hMvmt = gridCellSize * Double(hIndex)
 
         if vIndex == 0 && hIndex == 0 {
           polygons.append(
@@ -83,7 +107,7 @@ public struct GridHelper {
                          hMvmt: hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters)
+                         gridCellSize: gridCellSize)
           )
         } else if vIndex == 0 {
           polygons.append(contentsOf: [
@@ -92,13 +116,13 @@ public struct GridHelper {
                          hMvmt: hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters),
+                         gridCellSize: gridCellSize),
             buildPolygon(origin: origin,
                          vMvmt: vMvmt,
                          hMvmt: -hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters)
+                         gridCellSize: gridCellSize)
           ])
         } else if hIndex == 0 {
           polygons.append(contentsOf: [
@@ -107,13 +131,13 @@ public struct GridHelper {
                          hMvmt: hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters),
+                         gridCellSize: gridCellSize),
             buildPolygon(origin: origin,
                          vMvmt: -vMvmt,
                          hMvmt: hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters)
+                         gridCellSize: gridCellSize)
           ])
         } else {
           polygons.append(contentsOf: [
@@ -122,25 +146,25 @@ public struct GridHelper {
                          hMvmt: hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters),
+                         gridCellSize: gridCellSize),
             buildPolygon(origin: origin,
                          vMvmt: -vMvmt,
                          hMvmt: hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters),
+                         gridCellSize: gridCellSize),
             buildPolygon(origin: origin,
                          vMvmt: vMvmt,
                          hMvmt: -hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters),
+                         gridCellSize: gridCellSize),
             buildPolygon(origin: origin,
                          vMvmt: -vMvmt,
                          hMvmt: -hMvmt,
                          vLineMvmtDirection: vLineMvmtDirection,
                          hLineMvmtDirection: hLineMvmtDirection,
-                         acreInMeters: acreInMeters)
+                         gridCellSize: gridCellSize)
           ])
         }
       }
@@ -149,16 +173,21 @@ public struct GridHelper {
     return polygons
   }
 
-   static private func buildPolygon(origin: CLLocationCoordinate2D, vMvmt: Double, hMvmt: Double, vLineMvmtDirection: Double, hLineMvmtDirection: Double, acreInMeters: Double) -> GridPolygonOverlay {
+  static private func buildPolygon(origin: CLLocationCoordinate2D,
+                                   vMvmt: Double,
+                                   hMvmt: Double,
+                                   vLineMvmtDirection: Double,
+                                   hLineMvmtDirection: Double,
+                                   gridCellSize: Double) -> GridPolygonOverlay {
     let tl = origin.movedBy(distanceMeters: vMvmt,
                             bearingRadians: hLineMvmtDirection)
       .movedBy(distanceMeters: hMvmt,
                bearingRadians: vLineMvmtDirection)
-    let tr = tl.movedBy(distanceMeters: acreInMeters,
+    let tr = tl.movedBy(distanceMeters: gridCellSize,
                         bearingRadians: vLineMvmtDirection)
-    let bl = tr.movedBy(distanceMeters: acreInMeters,
+    let bl = tr.movedBy(distanceMeters: gridCellSize,
                         bearingRadians: hLineMvmtDirection)
-    let br = tl.movedBy(distanceMeters: acreInMeters,
+    let br = tl.movedBy(distanceMeters: gridCellSize,
                         bearingRadians: hLineMvmtDirection)
 
     let coords = [tl, tr, bl, br, tl]
