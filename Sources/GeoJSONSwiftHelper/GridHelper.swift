@@ -202,7 +202,7 @@ public struct GridHelper {
     var boundary: Turf.Polygon? = nil
     public var selected = false
 
-    var opacity: Double {
+    public var opacity: Double {
       selected ? 1 : 0
     }
 
