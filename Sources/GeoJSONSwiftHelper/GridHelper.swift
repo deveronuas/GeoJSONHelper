@@ -199,7 +199,7 @@ public struct GridHelper {
     public let id = UUID()
     let isGrid = true
 
-    var boundary: Turf.Polygon? = nil
+    public var boundary: Turf.Polygon? = nil
     public var selected = false
 
     public var opacity: Double {
