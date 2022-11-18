@@ -206,7 +206,7 @@ public struct GridHelper {
       selected ? 1 : 0
     }
 
-    var geoJSON: String {
+    public var geoJSON: String {
       guard let boundary = boundary else { return "" }
 
       let geoObj = Turf.Geometry(boundary)
