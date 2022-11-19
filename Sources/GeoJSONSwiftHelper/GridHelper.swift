@@ -196,7 +196,7 @@ public struct GridHelper {
   }
 
   public class GridPolygonOverlay: MKPolygon, Identifiable, Comparable {
-    public let id = UUID()
+    public var id = UUID()
     let isGrid = true
 
     public var boundary: Turf.Polygon? = nil
