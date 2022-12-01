@@ -199,17 +199,17 @@ public struct GridHelper {
   }
 
   public class GridPolygonOverlay: MKPolygon, Identifiable, Comparable {
-    public let id = UUID()
+    public var id = UUID()
     let isGrid = true
 
-    var boundary: Turf.Polygon? = nil
-    var selected = false
+    public var boundary: Turf.Polygon? = nil
+    public var selected = false
 
-    var opacity: Double {
+    public var opacity: Double {
       selected ? 1 : 0
     }
 
-    var status: gridPolygonStatus = .pending
+    public var status: gridPolygonStatus = .pending
 
     public var geoJSON: String {
       guard let boundary = boundary else { return "" }

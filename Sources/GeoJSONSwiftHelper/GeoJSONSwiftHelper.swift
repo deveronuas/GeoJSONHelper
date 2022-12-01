@@ -244,13 +244,13 @@ extension GeoJSONObject {
 }
 
 public struct CoordinateBounds {
-  let southwest: CLLocationCoordinate2D
-  let northeast: CLLocationCoordinate2D
+  public let southwest: CLLocationCoordinate2D
+  public let northeast: CLLocationCoordinate2D
 
-  var southeast: CLLocationCoordinate2D {
+  public var southeast: CLLocationCoordinate2D {
     return CLLocationCoordinate2D(latitude: southwest.latitude, longitude: northeast.longitude)
   }
-  var northwest: CLLocationCoordinate2D {
+  public var northwest: CLLocationCoordinate2D {
     return CLLocationCoordinate2D(latitude: northeast.latitude, longitude: southwest.longitude)
   }
 }
