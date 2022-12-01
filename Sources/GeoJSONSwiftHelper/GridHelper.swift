@@ -5,7 +5,7 @@ import GEOSwift
 
 
 public struct GridHelper {
-  enum gridPolygonStatus {
+  public enum gridPolygonStatus {
     case pending, skipped, done
   }
   typealias LineCoordinates = (start: CLLocationCoordinate2D, end: CLLocationCoordinate2D)
