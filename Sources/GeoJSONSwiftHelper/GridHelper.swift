@@ -5,6 +5,9 @@ import GEOSwift
 
 
 public struct GridHelper {
+  enum gridPolygonStatus {
+    case pending, skipped, done
+  }
   typealias LineCoordinates = (start: CLLocationCoordinate2D, end: CLLocationCoordinate2D)
 
   /// This method will calculate the horizontal and verticle grid lines from the overlay's center to the overlay's bound with the provided rotation and offset.
@@ -205,6 +208,8 @@ public struct GridHelper {
     var opacity: Double {
       selected ? 1 : 0
     }
+
+    var status: gridPolygonStatus = .pending
 
     public var geoJSON: String {
       guard let boundary = boundary else { return "" }
