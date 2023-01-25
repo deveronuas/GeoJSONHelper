@@ -199,9 +199,8 @@ public struct GridHelper {
   }
 
   public class GridPolygonOverlay: MKPolygon, Identifiable, Comparable {
-    public var id = UUID()
-    let isGrid = true
-
+    public var id: String = UUID().uuidString
+    public let isGrid: Bool = true
     public var boundary: Turf.Polygon? = nil
     public var selected = false
 
@@ -216,7 +215,7 @@ public struct GridHelper {
 
       let geoObj = Turf.Geometry(boundary)
       var feature = Turf.Feature(geometry: geoObj)
-      feature.properties = JSONObject(rawValue: ["id": id.uuidString])
+      feature.properties = JSONObject(rawValue: ["id": id])
 
       if let geoData = try? JSONEncoder().encode(feature),
          let geoString = String(data: geoData, encoding: .utf8) {
