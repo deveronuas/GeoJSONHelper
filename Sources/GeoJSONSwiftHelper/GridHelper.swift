@@ -266,6 +266,7 @@ public struct GridHelper {
       let jsonDecoder = JSONDecoder()
       let jsonEncoder = JSONEncoder()
       do  {
+        /// 1. Convert boundary and cell polygon to GEOSwift Geometries
         guard let boundary = self.boundary else { return nil }
         let cellData = try jsonEncoder.encode(boundary)
         let cellGeoJSONObj = try jsonDecoder.decode(GEOSwift.GeoJSON.self, from: cellData)
@@ -283,7 +284,6 @@ public struct GridHelper {
           case .geometry(let geometry):
             boundaryGeometries = [geometry]
           }
-
           boundaryGeometries.forEach { boundaryGeometry in
             /// 2. Find intersection
             if let boundaryGeometry = boundaryGeometry {
@@ -298,7 +298,6 @@ public struct GridHelper {
               }
             }
           }
-
           /// 3. Convert intersection geometry to a GridPolygonOverlay
           ///
           ///
@@ -310,10 +309,9 @@ public struct GridHelper {
           newOverlay.selected = true
           return newOverlay
           }
-
         }
       } catch {
-        print(error.localizedDescription)
+        print(String(describing: error))
       }
       return nil
     }
