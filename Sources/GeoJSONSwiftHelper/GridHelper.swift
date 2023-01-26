@@ -265,51 +265,55 @@ public struct GridHelper {
     public func intersection(with boundaryGeoJSON: String) -> GridPolygonOverlay? {
       let jsonDecoder = JSONDecoder()
       let jsonEncoder = JSONEncoder()
+      do  {
+        let cellData = try jsonEncoder.encode(self.boundary)
+        let cellGeoJSONObj = try jsonDecoder.decode(GEOSwift.GeoJSON.self, from: cellData)
+        if let boundaryData = boundaryGeoJSON.data(using: .utf8) {
+          let boundaryGeoJSONObj = try jsonDecoder.decode(GEOSwift.GeoJSON.self, from: boundaryData)
 
-      /// 1. Convert boundary and cell polygon to GEOSwift Geometries
-      if let cellData = try? jsonEncoder.encode(self.boundary),
-         let cellGeoJSONObj = try? jsonDecoder.decode(GEOSwift.GeoJSON.self, from: cellData),
-         let boundaryData = boundaryGeoJSON.data(using: .utf8),
-         let boundaryGeoJSONObj = try? jsonDecoder.decode(GEOSwift.GeoJSON.self, from: boundaryData)
-      {
-      var intersectedGeometry: GEOSwift.Geometry? = nil
-      var boundaryGeometries: [GEOSwift.Geometry?] = []
+          var intersectedGeometry: GEOSwift.Geometry? = nil
+          var boundaryGeometries: [GEOSwift.Geometry?] = []
 
-      switch boundaryGeoJSONObj {
-      case .feature(let feature):
-        boundaryGeometries = [feature.geometry]
-      case .featureCollection(let featureCollection):
-        boundaryGeometries = featureCollection.features.map({ $0.geometry })
-      case .geometry(let geometry):
-        boundaryGeometries = [geometry]
-      }
-
-      boundaryGeometries.forEach { boundaryGeometry in
-        /// 2. Find intersection
-        if let boundaryGeometry = boundaryGeometry {
-          // we assume grid cell overlays are always geometries
-          switch cellGeoJSONObj {
+          switch boundaryGeoJSONObj {
+          case .feature(let feature):
+            boundaryGeometries = [feature.geometry]
+          case .featureCollection(let featureCollection):
+            boundaryGeometries = featureCollection.features.map({ $0.geometry })
           case .geometry(let geometry):
-            if let overlap = try? geometry.intersection(with: boundaryGeometry) {
-              intersectedGeometry = overlap
-            }
-          default:
-            print("Grid cell is not a geometry")
+            boundaryGeometries = [geometry]
           }
+
+          boundaryGeometries.forEach { boundaryGeometry in
+            /// 2. Find intersection
+            if let boundaryGeometry = boundaryGeometry {
+              // we assume grid cell overlays are always geometries
+              switch cellGeoJSONObj {
+              case .geometry(let geometry):
+                if let overlap = try? geometry.intersection(with: boundaryGeometry) {
+                  intersectedGeometry = overlap
+                }
+              default:
+                print("Grid cell is not a geometry")
+              }
+            }
+          }
+
+          /// 3. Convert intersection geometry to a GridPolygonOverlay
+          ///
+          ///
+          let intersectedJsonData = try jsonEncoder.encode(intersectedGeometry)
+          if let intersectedJsonString = String(data: intersectedJsonData, encoding: .utf8),
+             let intersectedGeoObj = Turf.GeoJSONObject.create(from: intersectedJsonString)
+          {
+          let newOverlay = GridHelper.GridPolygonOverlay.create(intersectedGeoObj)
+          newOverlay.selected = true
+          return newOverlay
+          }
+
         }
+      } catch {
+        print(error.localizedDescription)
       }
-
-      /// 3. Convert intersection geometry to a GridPolygonOverlay
-      if let intersectedJsonData = try? jsonEncoder.encode(intersectedGeometry),
-         let intersectedJsonString = String(data: intersectedJsonData, encoding: .utf8),
-         let intersectedGeoObj = Turf.GeoJSONObject.create(from: intersectedJsonString)
-      {
-      let newOverlay = GridHelper.GridPolygonOverlay.create(intersectedGeoObj)
-      newOverlay.selected = true
-      return newOverlay
-      }
-      }
-
       return nil
     }
   }
