@@ -218,7 +218,7 @@ public struct GridHelper {
   public class GridPolygonOverlay: MKPolygon, Identifiable, Comparable {
     public var id: String = UUID().uuidString
     public let isGrid: Bool = true
-    public var boundary: [Turf.Polygon]? = nil
+    public var boundary: Turf.MultiPolygon? = nil
     public var selected = false
 
     public var opacity: Double {
@@ -230,7 +230,7 @@ public struct GridHelper {
     public var geoJSON: String {
       guard let boundary = boundary else { return "" }
 
-      let geoObj = Turf.MultiPolygon(boundary)
+      let geoObj = boundary
       var feature = Turf.Feature(geometry: geoObj)
       feature.properties = JSONObject(rawValue: ["id": id])
 
@@ -245,7 +245,7 @@ public struct GridHelper {
     public static func create(_ geoJSONObj: GeoJSONObject, selected: Bool = false) -> GridPolygonOverlay {
       let polygon = GridPolygonOverlay()
       polygon.selected = selected
-      polygon.boundary = geoJSONObj.polygons
+      polygon.boundary = geoJSONObj.multipolygons
       return polygon
     }
 
@@ -266,7 +266,8 @@ public struct GridHelper {
       let jsonDecoder = JSONDecoder()
       let jsonEncoder = JSONEncoder()
       do  {
-        let cellData = try jsonEncoder.encode(self.boundary)
+        guard let boundary = self.boundary else { return nil }
+        let cellData = try jsonEncoder.encode(boundary)
         let cellGeoJSONObj = try jsonDecoder.decode(GEOSwift.GeoJSON.self, from: cellData)
         if let boundaryData = boundaryGeoJSON.data(using: .utf8) {
           let boundaryGeoJSONObj = try jsonDecoder.decode(GEOSwift.GeoJSON.self, from: boundaryData)

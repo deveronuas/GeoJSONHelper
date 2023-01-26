@@ -60,18 +60,51 @@ extension GeoJSONObject {
     }
   }
 
+  public var multipolygons: Turf.MultiPolygon {
+    var polygons: [Turf.Polygon] = []
+    switch self {
+    case .geometry(let geometry):
+      polygons.append(contentsOf: getMultiPolygons(from: geometry).polygons)
+    case .feature(let feature):
+      polygons.append(contentsOf: getMultiPolygons(from: feature.geometry!).polygons)
+    case .featureCollection(let featureCollection):
+      for feature in featureCollection.features {
+        polygons.append(contentsOf: getMultiPolygons(from: feature.geometry!).polygons)
+      }
+    }
+    return Turf.MultiPolygon(polygons)
+  }
+
+  private func getMultiPolygons(from geometry: Turf.Geometry) -> Turf.MultiPolygon {
+    switch geometry {
+    case .point, .lineString, .multiPoint, .multiLineString:
+      return Turf.MultiPolygon([[]])
+    case .polygon(let polygon):
+      return Turf.MultiPolygon([polygon])
+    case .multiPolygon(let multiPolygon):
+      return multiPolygon
+    case .geometryCollection(let geometryCollection):
+      var polygons: [Turf.Polygon] = []
+      for geometry in geometryCollection.geometries {
+        switch geometry {
+        case .polygon(let polygon):
+          polygons.append(polygon)
+        case .multiPolygon(let multiPolygon):
+          polygons.append(contentsOf: multiPolygon.polygons)
+        default:
+          break
+        }
+      }
+      return Turf.MultiPolygon(polygons)
+    }
+  }
+
   private func getPolygons(from geometry: Turf.Geometry) -> [Turf.Polygon] {
     switch geometry {
-    case .point(_):
-      return []
-    case .lineString(_):
+    case .point, .lineString, .multiPoint, .multiLineString:
       return []
     case .polygon(let polygon):
       return [polygon]
-    case .multiPoint(_):
-      return []
-    case .multiLineString(_):
-      return []
     case .multiPolygon(let multiPolygon):
       return multiPolygon.polygons
     case .geometryCollection(let geometryCollection):
