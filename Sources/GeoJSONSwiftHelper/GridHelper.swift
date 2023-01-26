@@ -194,15 +194,31 @@ public struct GridHelper {
                         bearingRadians: hLineMvmtDirection)
 
     let coords = [tl, tr, bl, br, tl]
+    let geoJSONString = createGeoJSONString(from: coords)
+    guard let geoJSONObject = GeoJSONObject.create(from: geoJSONString ?? "") else { return GridPolygonOverlay() }
 
-    return GridPolygonOverlay.create(coords)
+    return GridPolygonOverlay.create(geoJSONObject)
+  }
+
+  static private func createGeoJSONString(from coordinates: [CLLocationCoordinate2D]) -> String? {
+    let polygon = Turf.Polygon([coordinates])
+    let geometry = Turf.Geometry(polygon)
+    var feature = Turf.Feature(geometry: geometry)
+    do {
+      let data = try JSONEncoder().encode(feature)
+      if let geoJSONString = String(bytes: data, encoding: .utf8) {
+        return geoJSONString
+      }
+    } catch let error as NSError {
+      print(error.localizedDescription)
+    }
+    return nil
   }
 
   public class GridPolygonOverlay: MKPolygon, Identifiable, Comparable {
-    public var id = UUID()
-    let isGrid = true
-
-    public var boundary: Turf.Polygon? = nil
+    public var id: String = UUID().uuidString
+    public let isGrid: Bool = true
+    public var boundary: Turf.MultiPolygon? = nil
     public var selected = false
 
     public var opacity: Double {
@@ -214,9 +230,9 @@ public struct GridHelper {
     public var geoJSON: String {
       guard let boundary = boundary else { return "" }
 
-      let geoObj = Turf.Geometry(boundary)
+      let geoObj = boundary
       var feature = Turf.Feature(geometry: geoObj)
-      feature.properties = JSONObject(rawValue: ["id": id.uuidString])
+      feature.properties = JSONObject(rawValue: ["id": id])
 
       if let geoData = try? JSONEncoder().encode(feature),
          let geoString = String(data: geoData, encoding: .utf8) {
@@ -226,10 +242,10 @@ public struct GridHelper {
       return ""
     }
 
-    public static func create(_ coords: [CLLocationCoordinate2D], selected: Bool = false) -> GridPolygonOverlay {
-      let polygon = GridPolygonOverlay(coordinates: coords, count: coords.count)
+    public static func create(_ geoJSONObj: GeoJSONObject, selected: Bool = false) -> GridPolygonOverlay {
+      let polygon = GridPolygonOverlay()
       polygon.selected = selected
-      polygon.boundary = Turf.Polygon([coords])
+      polygon.boundary = geoJSONObj.multipolygons
       return polygon
     }
 
@@ -249,53 +265,54 @@ public struct GridHelper {
     public func intersection(with boundaryGeoJSON: String) -> GridPolygonOverlay? {
       let jsonDecoder = JSONDecoder()
       let jsonEncoder = JSONEncoder()
+      do  {
+        /// 1. Convert boundary and cell polygon to GEOSwift Geometries
+        guard let boundary = self.boundary else { return nil }
+        let cellData = try jsonEncoder.encode(boundary)
+        let cellGeoJSONObj = try jsonDecoder.decode(GEOSwift.GeoJSON.self, from: cellData)
+        if let boundaryData = boundaryGeoJSON.data(using: .utf8) {
+          let boundaryGeoJSONObj = try jsonDecoder.decode(GEOSwift.GeoJSON.self, from: boundaryData)
 
-      /// 1. Convert boundary and cell polygon to GEOSwift Geometries
-      if let cellData = try? jsonEncoder.encode(self.boundary),
-         let cellGeoJSONObj = try? jsonDecoder.decode(GEOSwift.GeoJSON.self, from: cellData),
-         let boundaryData = boundaryGeoJSON.data(using: .utf8),
-         let boundaryGeoJSONObj = try? jsonDecoder.decode(GEOSwift.GeoJSON.self, from: boundaryData)
-      {
-      var intersectedGeometry: GEOSwift.Geometry? = nil
-      var boundaryGeometries: [GEOSwift.Geometry?] = []
+          var intersectedGeometry: GEOSwift.Geometry? = nil
+          var boundaryGeometries: [GEOSwift.Geometry?] = []
 
-      switch boundaryGeoJSONObj {
-      case .feature(let feature):
-        boundaryGeometries = [feature.geometry]
-      case .featureCollection(let featureCollection):
-        boundaryGeometries = featureCollection.features.map({ $0.geometry })
-      case .geometry(let geometry):
-        boundaryGeometries = [geometry]
-      }
-
-      boundaryGeometries.forEach { boundaryGeometry in
-        /// 2. Find intersection
-        if let boundaryGeometry = boundaryGeometry {
-          // we assume grid cell overlays are always geometries
-          switch cellGeoJSONObj {
+          switch boundaryGeoJSONObj {
+          case .feature(let feature):
+            boundaryGeometries = [feature.geometry]
+          case .featureCollection(let featureCollection):
+            boundaryGeometries = featureCollection.features.map({ $0.geometry })
           case .geometry(let geometry):
-            if let overlap = try? geometry.intersection(with: boundaryGeometry) {
-              intersectedGeometry = overlap
+            boundaryGeometries = [geometry]
+          }
+          boundaryGeometries.forEach { boundaryGeometry in
+            /// 2. Find intersection
+            if let boundaryGeometry = boundaryGeometry {
+              // we assume grid cell overlays are always geometries
+              switch cellGeoJSONObj {
+              case .geometry(let geometry):
+                if let overlap = try? geometry.intersection(with: boundaryGeometry) {
+                  intersectedGeometry = overlap
+                }
+              default:
+                print("Grid cell is not a geometry")
+              }
             }
-          default:
-            print("Grid cell is not a geometry")
+          }
+          /// 3. Convert intersection geometry to a GridPolygonOverlay
+          ///
+          ///
+          let intersectedJsonData = try jsonEncoder.encode(intersectedGeometry)
+          if let intersectedJsonString = String(data: intersectedJsonData, encoding: .utf8),
+             let intersectedGeoObj = Turf.GeoJSONObject.create(from: intersectedJsonString)
+          {
+          let newOverlay = GridHelper.GridPolygonOverlay.create(intersectedGeoObj)
+          newOverlay.selected = true
+          return newOverlay
           }
         }
+      } catch {
+        print(String(describing: error))
       }
-
-      /// 3. Convert intersection geometry to a GridPolygonOverlay
-      if let intersectedJsonData = try? jsonEncoder.encode(intersectedGeometry),
-         let intersectedJsonString = String(data: intersectedJsonData, encoding: .utf8),
-         let intersectedGeoObj = Turf.GeoJSONObject.create(from: intersectedJsonString),
-         let intersectedPolygon = intersectedGeoObj.polygons.first,
-         let intersectedPolygonCoords = intersectedPolygon.coordinates.first
-      {
-      let newOverlay = GridHelper.GridPolygonOverlay.create(intersectedPolygonCoords)
-      newOverlay.selected = true
-      return newOverlay
-      }
-      }
-
       return nil
     }
   }
