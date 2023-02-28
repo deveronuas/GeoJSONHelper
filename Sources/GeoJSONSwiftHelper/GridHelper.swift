@@ -23,55 +23,49 @@ public struct GridHelper {
                                    rotation: Double,
                                    offset: SizeInMeters,
                                    gridCellSize: Double) -> [GridLineOverlay] {
-    var hLines : [GridLineOverlay] = []
-    var vLines : [GridLineOverlay] = []
-
+    var hLines: [GridLineOverlay] = []
+    var vLines: [GridLineOverlay] = []
     let origin = center.movedBy(latitudinalMeters: offset.height, longitudinalMeters: offset.width)
     let gridSize = bounds.northwest.distance(from: bounds.southeast)
     var numOfLines = Int(ceil(gridSize / gridCellSize))
     numOfLines = numOfLines % 2 == 0 ? numOfLines : numOfLines + 1
     let lineLength = Double(numOfLines) * gridCellSize
-
     let rotationRadians = (rotation * Double.pi / 180)
     let vLineMvmtDirection = (Double.pi / 2.0) + rotationRadians
     let hLineMvmtDirection = (Double.pi) + rotationRadians
-
     let originVLineStart = origin.movedBy(distanceMeters: -lineLength / 2.0, bearingRadians: hLineMvmtDirection)
     let originVLineEnd = origin.movedBy(distanceMeters: lineLength / 2.0, bearingRadians: hLineMvmtDirection)
-
     let originHLineStart = origin.movedBy(distanceMeters: -lineLength / 2.0, bearingRadians: vLineMvmtDirection)
     let originHLineEnd = origin.movedBy(distanceMeters: lineLength / 2.0, bearingRadians: vLineMvmtDirection)
-
-    // Origin Lines
-    vLines.append(GridLineOverlay(coordinates: [originVLineStart, originVLineEnd], count: 2))
-    hLines.append(GridLineOverlay(coordinates: [originHLineStart, originHLineEnd], count: 2))
-
     // Fill the bounds
-    for num in 1...Int(numOfLines / 2) {
+    let numOfPairs = numOfLines / 2
+    let strideValue = stride(from: 1, through: numOfPairs, by: 1)
+    var vLineMapPoints = strideValue.flatMap { num -> [MKMapPoint] in
       let mvmt = gridCellSize * Double(num)
-
-      // Vertical lines
       let vNegLineStart = originVLineStart.movedBy(distanceMeters: -mvmt, bearingRadians: vLineMvmtDirection)
       let vNegLineEnd = originVLineEnd.movedBy(distanceMeters: -mvmt, bearingRadians: vLineMvmtDirection)
-
       let vPosLineStart = originVLineStart.movedBy(distanceMeters: mvmt, bearingRadians: vLineMvmtDirection)
       let vPosLineEnd = originVLineEnd.movedBy(distanceMeters: mvmt, bearingRadians: vLineMvmtDirection)
-
-      vLines.append(GridLineOverlay(coordinates: [vNegLineStart, vNegLineEnd], count: 2))
-      vLines.append(GridLineOverlay(coordinates: [vPosLineStart, vPosLineEnd], count: 2))
-
-      // Horizontal lines
+      return [MKMapPoint(vNegLineStart), MKMapPoint(vNegLineEnd),
+              MKMapPoint(vPosLineEnd), MKMapPoint(vPosLineStart)]
+    }
+    vLineMapPoints.append(MKMapPoint(originVLineStart))
+    vLineMapPoints.append(MKMapPoint(originVLineEnd))
+    var hLineMapPoints = strideValue.flatMap { num -> [MKMapPoint] in
+      let mvmt = gridCellSize * Double(num)
       let hNegLineStart = originHLineStart.movedBy(distanceMeters: -mvmt, bearingRadians: hLineMvmtDirection)
       let hNegLineEnd = originHLineEnd.movedBy(distanceMeters: -mvmt, bearingRadians: hLineMvmtDirection)
-
       let hPosLineStart = originHLineStart.movedBy(distanceMeters: mvmt, bearingRadians: hLineMvmtDirection)
       let hPosLineEnd = originHLineEnd.movedBy(distanceMeters: mvmt, bearingRadians: hLineMvmtDirection)
-
-      hLines.append(GridLineOverlay(coordinates: [hNegLineStart, hNegLineEnd], count: 2))
-      hLines.append(GridLineOverlay(coordinates: [hPosLineStart, hPosLineEnd], count: 2))
+      return [MKMapPoint(hNegLineStart), MKMapPoint(hNegLineEnd),
+              MKMapPoint(hPosLineEnd), MKMapPoint(hPosLineStart)]
     }
+    hLineMapPoints.append(MKMapPoint(originHLineStart))
+    hLineMapPoints.append(MKMapPoint(originHLineEnd))
+    vLines.append(GridHelper.GridLineOverlay(points: vLineMapPoints, count: vLineMapPoints.count))
+    hLines.append(GridHelper.GridLineOverlay(points: hLineMapPoints, count: hLineMapPoints.count))
 
-    return [vLines.sorted(), hLines.sorted()].flatMap({ $0 })
+    return [vLines, hLines].flatMap({ $0 })
   }
 
   /// This method will calculate the grid polygons from the overlay's center to the overlay's bound with the provided rotation and offset.
