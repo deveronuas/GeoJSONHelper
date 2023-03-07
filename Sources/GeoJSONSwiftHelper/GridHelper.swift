@@ -22,7 +22,7 @@ public struct GridHelper {
                                    center: CLLocationCoordinate2D,
                                    rotation: Double,
                                    offset: SizeInMeters,
-                                   gridCellSize: Double) -> [GridLineOverlay] {
+                                   gridCellSize: Double) -> GridLinesOverlay {
     var hLines: [GridLineOverlay] = []
     var vLines: [GridLineOverlay] = []
     let origin = center.movedBy(latitudinalMeters: offset.height, longitudinalMeters: offset.width)
@@ -65,7 +65,7 @@ public struct GridHelper {
     vLines.append(GridHelper.GridLineOverlay(points: vLineMapPoints, count: vLineMapPoints.count))
     hLines.append(GridHelper.GridLineOverlay(points: hLineMapPoints, count: hLineMapPoints.count))
 
-    return [vLines, hLines].flatMap({ $0 })
+    return GridLinesOverlay([vLines, hLines].flatMap({ $0 }))
   }
 
   /// This method will calculate the grid polygons from the overlay's center to the overlay's bound with the provided rotation and offset.
@@ -318,4 +318,6 @@ public struct GridHelper {
       lhs.coordinate < rhs.coordinate
     }
   }
+
+  public class GridLinesOverlay: MKMultiPolyline {}
 }
