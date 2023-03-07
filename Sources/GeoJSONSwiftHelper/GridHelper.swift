@@ -17,12 +17,12 @@ public struct GridHelper {
   ///     - rotation: Rotaion should be in degrees and it rotates the grid line as per the provided rotation.
   ///     - offset: Offset should be in SizeInMeters and it moves the grid line as per the provided offset.
   ///     - gridCellSize: GridCellSize should be in meters and it is the distance between two grid line.
-  /// - Returns: The array of GridLineOverlay.
+  /// - Returns: GridLinesOverlay.
   public static func calcGridLines(bounds: CoordinateBounds,
                                    center: CLLocationCoordinate2D,
                                    rotation: Double,
                                    offset: SizeInMeters,
-                                   gridCellSize: Double) -> [GridLineOverlay] {
+                                   gridCellSize: Double) -> GridLinesOverlay {
     var hLines: [GridLineOverlay] = []
     var vLines: [GridLineOverlay] = []
     let origin = center.movedBy(latitudinalMeters: offset.height, longitudinalMeters: offset.width)
@@ -65,7 +65,7 @@ public struct GridHelper {
     vLines.append(GridHelper.GridLineOverlay(points: vLineMapPoints, count: vLineMapPoints.count))
     hLines.append(GridHelper.GridLineOverlay(points: hLineMapPoints, count: hLineMapPoints.count))
 
-    return [vLines, hLines].flatMap({ $0 })
+    return GridLinesOverlay([vLines, hLines].flatMap({ $0 }))
   }
 
   /// This method will calculate the grid polygons from the overlay's center to the overlay's bound with the provided rotation and offset.
@@ -318,4 +318,6 @@ public struct GridHelper {
       lhs.coordinate < rhs.coordinate
     }
   }
+
+  public class GridLinesOverlay: MKMultiPolyline {}
 }
