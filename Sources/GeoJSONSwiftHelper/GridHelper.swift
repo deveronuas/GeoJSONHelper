@@ -17,7 +17,7 @@ public struct GridHelper {
   ///     - rotation: Rotaion should be in degrees and it rotates the grid line as per the provided rotation.
   ///     - offset: Offset should be in SizeInMeters and it moves the grid line as per the provided offset.
   ///     - gridCellSize: GridCellSize should be in meters and it is the distance between two grid line.
-  /// - Returns: The array of GridLineOverlay.
+  /// - Returns: GridLinesOverlay.
   public static func calcGridLines(bounds: CoordinateBounds,
                                    center: CLLocationCoordinate2D,
                                    rotation: Double,
