@@ -52,30 +52,41 @@ extension GeoJSONObject {
   public var polygons: [Turf.Polygon] {
     switch self {
     case .geometry(let geometry):
-      return getPolygons(from: geometry)
+      return Helper.getPolygons(from: geometry)
     case .feature(let feature):
-      return getPolygons(from: feature.geometry!)
+      return Helper.getPolygons(from: feature.geometry!)
     case .featureCollection(let featureCollection):
-      return featureCollection.features.flatMap { getPolygons(from: $0.geometry!) }
+      return featureCollection.features.flatMap { Helper.getPolygons(from: $0.geometry!) }
     }
   }
 
-  public var multipolygons: Turf.MultiPolygon {
+  public var features: [Turf.Feature] {
+    switch self {
+    case .geometry(let geometry):
+      return [Turf.Feature(geometry: geometry)]
+    case .feature(let feature):
+      return [feature]
+    case .featureCollection(let featureCollection):
+      return featureCollection.features
+    }
+  }
+
+  public var multiPolygon: Turf.MultiPolygon {
     var polygons: [Turf.Polygon] = []
     switch self {
     case .geometry(let geometry):
-      polygons.append(contentsOf: getMultiPolygons(from: geometry).polygons)
+      polygons.append(contentsOf: getMultiPolygon(from: geometry).polygons)
     case .feature(let feature):
-      polygons.append(contentsOf: getMultiPolygons(from: feature.geometry!).polygons)
+      polygons.append(contentsOf: getMultiPolygon(from: feature.geometry!).polygons)
     case .featureCollection(let featureCollection):
       for feature in featureCollection.features {
-        polygons.append(contentsOf: getMultiPolygons(from: feature.geometry!).polygons)
+        polygons.append(contentsOf: getMultiPolygon(from: feature.geometry!).polygons)
       }
     }
     return Turf.MultiPolygon(polygons)
   }
 
-  private func getMultiPolygons(from geometry: Turf.Geometry) -> Turf.MultiPolygon {
+  private func getMultiPolygon(from geometry: Turf.Geometry) -> Turf.MultiPolygon {
     switch geometry {
     case .point, .lineString, .multiPoint, .multiLineString:
       return Turf.MultiPolygon([[]])
@@ -96,19 +107,6 @@ extension GeoJSONObject {
         }
       }
       return Turf.MultiPolygon(polygons)
-    }
-  }
-
-  private func getPolygons(from geometry: Turf.Geometry) -> [Turf.Polygon] {
-    switch geometry {
-    case .point, .lineString, .multiPoint, .multiLineString:
-      return []
-    case .polygon(let polygon):
-      return [polygon]
-    case .multiPolygon(let multiPolygon):
-      return multiPolygon.polygons
-    case .geometryCollection(let geometryCollection):
-      return geometryCollection.geometries.flatMap { getPolygons(from: $0 )}
     }
   }
 
@@ -430,5 +428,17 @@ extension CLLocationCoordinate2D {
     let otherLoc = CLLocation(latitude: otherCoordinate.latitude, longitude: otherCoordinate.longitude)
 
     return myLoc.distance(from: otherLoc)
+  }
+}
+
+extension Turf.Feature {
+  public func contains(_ coordinate: LocationCoordinate2D, ignoreBoundary: Bool = false) -> Bool {
+    var polygons: [Turf.Polygon] = Helper.getPolygons(from: self.geometry!)
+    for polygon in polygons {
+      if polygon.contains(coordinate) {
+        return true
+      }
+    }
+    return false
   }
 }

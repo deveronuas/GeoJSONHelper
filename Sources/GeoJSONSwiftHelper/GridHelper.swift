@@ -239,7 +239,7 @@ public struct GridHelper {
     public static func create(_ geoJSONObj: GeoJSONObject, selected: Bool = false) -> GridPolygonOverlay {
       let polygon = GridPolygonOverlay()
       polygon.selected = selected
-      polygon.boundary = geoJSONObj.multipolygons
+      polygon.boundary = geoJSONObj.multiPolygon
       return polygon
     }
 
