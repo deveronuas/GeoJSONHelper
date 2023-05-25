@@ -197,7 +197,7 @@ public struct GridHelper {
   static private func createGeoJSONString(from coordinates: [CLLocationCoordinate2D]) -> String? {
     let polygon = Turf.Polygon([coordinates])
     let geometry = Turf.Geometry(polygon)
-    var feature = Turf.Feature(geometry: geometry)
+    let feature = Turf.Feature(geometry: geometry)
     do {
       let data = try JSONEncoder().encode(feature)
       if let geoJSONString = String(bytes: data, encoding: .utf8) {

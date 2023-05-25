@@ -433,12 +433,30 @@ extension CLLocationCoordinate2D {
 
 extension Turf.Feature {
   public func contains(_ coordinate: LocationCoordinate2D, ignoreBoundary: Bool = false) -> Bool {
-    var polygons: [Turf.Polygon] = Helper.getPolygons(from: self.geometry!)
+    let polygons: [Turf.Polygon] = Helper.getPolygons(from: self.geometry!)
     for polygon in polygons {
       if polygon.contains(coordinate) {
         return true
       }
     }
     return false
+  }
+  public var polygons: [Turf.Polygon] {
+    Helper.getPolygons(from: self.geometry!)
+  }
+}
+
+fileprivate struct Helper {
+  public static func getPolygons(from geometry: Turf.Geometry) -> [Turf.Polygon] {
+    switch geometry {
+    case .point, .lineString, .multiPoint, .multiLineString:
+      return []
+    case .polygon(let polygon):
+      return [polygon]
+    case .multiPolygon(let multiPolygon):
+      return multiPolygon.polygons
+    case .geometryCollection(let geometryCollection):
+      return geometryCollection.geometries.flatMap { getPolygons(from: $0 )}
+    }
   }
 }
