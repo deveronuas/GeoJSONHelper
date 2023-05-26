@@ -484,12 +484,12 @@ fileprivate struct Helper {
           MKPolyline(coordinates: $0, count: $0.count)
         ]}
     case .multiPolygon(let multiPolygon):
-      return multiPolygon
+      return [MKMultiPolygon(multiPolygon
         .coordinates
         .flatMap { $0 }
         .flatMap { [
           MKPolygon(coordinates: $0, count: $0.count)
-        ] }
+        ]})]
     case .geometryCollection(let geometryCollection):
       return geometryCollection.geometries.flatMap { getOverlays(from: $0.geometry)}
     }
