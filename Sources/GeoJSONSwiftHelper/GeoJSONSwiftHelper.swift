@@ -459,6 +459,7 @@ fileprivate struct Helper {
       return geometryCollection.geometries.flatMap { getPolygons(from: $0 )}
     }
   }
+
   public static func getOverlays(from geometry: Turf.Geometry) -> [MKOverlay] {
     switch geometry {
     case .point(let point):
@@ -468,28 +469,28 @@ fileprivate struct Helper {
       return [MKPolyline(coordinates: lineString.coordinates,
                          count: lineString.coordinates.count)]
     case .polygon(let polygon):
-      return [
-        BoundaryPolygon(coordinates:
-                          polygon.coordinates.flatMap { $0 },
-                        count:
-                          polygon.coordinates.flatMap { $0 }.count)
-      ]
+      return [Helper.getOverlay(from: polygon)]
     case .multiPoint(let multiPoint):
-      return multiPoint.coordinates.map { MKCircle(center: $0,
-                                                   radius: 1.0) }
+      return multiPoint.coordinates.map { MKCircle(center: $0, radius: 1.0) }
     case .multiLineString(let multiLineString):
       return multiLineString
         .coordinates
-        .flatMap {[
-          MKPolyline(coordinates: $0, count: $0.count)
-        ]}
+        .flatMap { [MKPolyline(coordinates: $0, count: $0.count)] }
     case .multiPolygon(let multiPolygon):
-      return multiPolygon
-        .coordinates
-        .flatMap { $0 }
-        .flatMap { [MKPolygon(coordinates: $0, count: $0.count)] }
+      return multiPolygon.polygons.map({ Helper.getOverlay(from: $0) })
     case .geometryCollection(let geometryCollection):
-      return geometryCollection.geometries.flatMap { getOverlays(from: $0.geometry)}
+      return geometryCollection.geometries.flatMap { getOverlays(from: $0.geometry) }
     }
+  }
+
+  private static func getOverlay(from polygon: Turf.Polygon) -> MKOverlay {
+    let interiorPolygons = polygon.innerRings.map({
+      MKPolygon(coordinates: $0.coordinates, count: $0.coordinates.count)
+    })
+    let exteriorPolygons = MKPolygon(
+      coordinates: polygon.outerRing.coordinates,
+      count: polygon.outerRing.coordinates.count,
+      interiorPolygons: interiorPolygons)
+    return exteriorPolygons
   }
 }
