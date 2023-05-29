@@ -52,11 +52,11 @@ extension GeoJSONObject {
   public var polygons: [Turf.Polygon] {
     switch self {
     case .geometry(let geometry):
-      return Helper.getPolygons(from: geometry)
+      return Utils.getPolygons(from: geometry)
     case .feature(let feature):
-      return Helper.getPolygons(from: feature.geometry!)
+      return Utils.getPolygons(from: feature.geometry!)
     case .featureCollection(let featureCollection):
-      return featureCollection.features.flatMap { Helper.getPolygons(from: $0.geometry!) }
+      return featureCollection.features.flatMap { Utils.getPolygons(from: $0.geometry!) }
     }
   }
 
@@ -433,7 +433,7 @@ extension CLLocationCoordinate2D {
 
 extension Turf.Feature {
   public func contains(_ coordinate: LocationCoordinate2D, ignoreBoundary: Bool = false) -> Bool {
-    let polygons: [Turf.Polygon] = Helper.getPolygons(from: self.geometry!)
+    let polygons: [Turf.Polygon] = Utils.getPolygons(from: self.geometry!)
     for polygon in polygons {
       if polygon.contains(coordinate) {
         return true
@@ -441,12 +441,12 @@ extension Turf.Feature {
     }
     return false
   }
-  public var layers: [MKOverlay] {
-    Helper.getOverlays(from: self.geometry!)
+  public var overlays: [MKOverlay] {
+    Utils.getOverlays(from: self.geometry!)
   }
 }
 
-fileprivate struct Helper {
+fileprivate struct Utils {
   public static func getPolygons(from geometry: Turf.Geometry) -> [Turf.Polygon] {
     switch geometry {
     case .point, .lineString, .multiPoint, .multiLineString:
@@ -469,7 +469,7 @@ fileprivate struct Helper {
       return [MKPolyline(coordinates: lineString.coordinates,
                          count: lineString.coordinates.count)]
     case .polygon(let polygon):
-      return [Helper.getOverlay(from: polygon)]
+      return [getOverlay(from: polygon)]
     case .multiPoint(let multiPoint):
       return multiPoint.coordinates.map { MKCircle(center: $0, radius: 1.0) }
     case .multiLineString(let multiLineString):
@@ -477,20 +477,20 @@ fileprivate struct Helper {
         .coordinates
         .flatMap { [MKPolyline(coordinates: $0, count: $0.count)] }
     case .multiPolygon(let multiPolygon):
-      return multiPolygon.polygons.map({ Helper.getOverlay(from: $0) })
+      return multiPolygon.polygons.map({ getOverlay(from: $0) })
     case .geometryCollection(let geometryCollection):
       return geometryCollection.geometries.flatMap { getOverlays(from: $0.geometry) }
     }
   }
 
   private static func getOverlay(from polygon: Turf.Polygon) -> MKOverlay {
-    let interiorPolygons = polygon.innerRings.map({
+    let interiorOverlays = polygon.innerRings.map({
       MKPolygon(coordinates: $0.coordinates, count: $0.coordinates.count)
     })
-    let exteriorPolygons = MKPolygon(
+    let overlay = MKPolygon(
       coordinates: polygon.outerRing.coordinates,
       count: polygon.outerRing.coordinates.count,
-      interiorPolygons: interiorPolygons)
-    return exteriorPolygons
+      interiorPolygons: interiorOverlays)
+    return overlay
   }
 }
