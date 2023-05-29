@@ -77,8 +77,7 @@ extension GeoJSONObject {
       return feature.geometry?.multiPolygon
     case .featureCollection(let featureCollection):
       let polygons = featureCollection.features.compactMap {
-        $0.geometry?.polygons
-      }
+        $0.geometry?.polygons }
       if !polygons.isEmpty {
         return Turf.MultiPolygon(polygons.flatMap { $0 })
       }
