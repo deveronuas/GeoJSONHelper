@@ -1,4 +1,5 @@
 import MapKit
+import Turf
 
 extension CLLocationCoordinate2D {
   public func movedBy(latitudinalMeters: CLLocationDistance, longitudinalMeters: CLLocationDistance) -> CLLocationCoordinate2D {
@@ -31,13 +32,13 @@ extension CLLocationCoordinate2D {
   }
 }
 
-extension MKCoordinateRegion : Equatable {
+extension MKCoordinateRegion: Equatable {
   public static func == (lhs: MKCoordinateRegion, rhs: MKCoordinateRegion) -> Bool {
     return lhs.center == rhs.center && lhs.span == rhs.span
   }
 }
 
-extension CLLocationCoordinate2D : Comparable {
+extension CLLocationCoordinate2D: Comparable {
   public static func < (lhs: CLLocationCoordinate2D, rhs: CLLocationCoordinate2D) -> Bool {
     return lhs.latitude < rhs.latitude && lhs.longitude < rhs.longitude
   }
