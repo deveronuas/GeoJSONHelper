@@ -52,18 +52,9 @@ extension GeoJSONObject {
     case .geometry(let geometry):
       return geometry.polygons
     case .feature(let feature):
-      if let geometry = feature.geometry, let polygons = geometry.polygons {
-        return polygons
-      }
-      return nil
+      return feature.geometry?.polygons
     case .featureCollection(let featureCollection):
-      let polygons = featureCollection.features.compactMap { feature -> [Turf.Polygon]? in
-        if let geometry = feature.geometry, let polygons = geometry.polygons {
-          return polygons
-        }
-        return nil
-      }
-      return polygons.isEmpty ? nil : polygons.flatMap { $0 }
+      return featureCollection.features.compactMap { $0.geometry?.polygons }.flatMap { $0 }
     }
   }
 
@@ -85,8 +76,8 @@ extension GeoJSONObject {
     case .feature(let feature):
       return feature.geometry?.multiPolygon
     case .featureCollection(let featureCollection):
-      let polygons = featureCollection.features.compactMap { feature -> [Turf.Polygon]? in
-        return feature.polygons
+      let polygons = featureCollection.features.compactMap {
+        $0.geometry?.polygons
       }
       if !polygons.isEmpty {
         return Turf.MultiPolygon(polygons.flatMap { $0 })
@@ -193,19 +184,19 @@ extension GeoJSONObject {
   }
 
   public var mapPolygons: [MKPolygon]? {
-    return overlays.filter { overlay in
+    return overlays?.filter { overlay in
       overlay is MKPolygon
     } as? [MKPolygon]
   }
 
-  public var overlays: [MKOverlay] {
+  public var overlays: [MKOverlay]? {
     switch self {
     case .geometry(let geometry):
       return  geometry.overlays
     case .feature(let feature):
-      return feature.geometry!.overlays
+      return feature.geometry?.overlays
     case .featureCollection(let featureCollection):
-      return featureCollection.features.flatMap { $0.geometry!.overlays }
+      return featureCollection.features.compactMap { $0.geometry?.overlays }.flatMap({ $0 })
     }
   }
 
@@ -380,8 +371,7 @@ extension CLLocationCoordinate2D {
 
 extension Turf.Feature {
   public func contains(_ coordinate: LocationCoordinate2D, ignoreBoundary: Bool = false) -> Bool {
-    if let geometry = self.geometry,
-       let polygons: [Turf.Polygon] = geometry.polygons {
+    if let polygons: [Turf.Polygon] = geometry?.polygons {
       for polygon in polygons {
         if polygon.contains(coordinate) {
           return true
@@ -393,21 +383,13 @@ extension Turf.Feature {
   }
 
   public var overlays: [MKOverlay]? {
-    guard let geometry = geometry else { return nil }
-    return geometry.overlays
-  }
-
-  public var polygons: [Turf.Polygon]? {
-    guard let geometry = geometry else { return nil }
-    return geometry.polygons
+    return geometry?.overlays
   }
 }
 
 extension Turf.Geometry {
   var multiPolygon: Turf.MultiPolygon? {
     switch self {
-    case .point, .lineString, .multiPoint, .multiLineString:
-      return nil
     case .polygon(let polygon):
       return Turf.MultiPolygon([polygon])
     case .multiPolygon(let multiPolygon):
@@ -415,6 +397,8 @@ extension Turf.Geometry {
     case .geometryCollection(let geometryCollection):
       let polygons = geometryCollection.geometries.compactMap { $0.polygons }
       return Turf.MultiPolygon(polygons.flatMap { $0 })
+    default:
+      return nil
     }
   }
 
@@ -439,17 +423,14 @@ extension Turf.Geometry {
 
   var polygons: [Turf.Polygon]? {
     switch self {
-    case .point, .lineString, .multiPoint, .multiLineString:
-      return nil
     case .polygon(let polygon):
       return [polygon]
     case .multiPolygon(let multiPolygon):
       return multiPolygon.polygons
     case .geometryCollection(let geometryCollection):
-      let polygons = geometryCollection.geometries.compactMap { geometry -> [Turf.Polygon]? in
-        return geometry.polygons
-      }
-      return polygons.isEmpty ? nil : polygons.flatMap { $0 }
+      return geometryCollection.geometries.compactMap { $0.polygons }.flatMap({ $0 })
+    default:
+      return nil
     }
   }
 }
