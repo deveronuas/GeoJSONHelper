@@ -371,7 +371,7 @@ extension Turf.Feature {
   public func contains(_ coordinate: LocationCoordinate2D, ignoreBoundary: Bool = false) -> Bool {
     if let polygons: [Turf.Polygon] = geometry?.polygons {
       for polygon in polygons {
-        if polygon.contains(coordinate) {
+        if polygon.outerRing.contains(coordinate) {
           return true
         }
       }
