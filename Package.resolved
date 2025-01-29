@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GEOSwift/geos.git",
       "state" : {
-        "revision" : "dc3a1e798e7ebb3cee1b6b219af2b0783820ff60",
-        "version" : "7.0.0"
+        "revision" : "4d8af495e7507f48f1ae9104102debdd2043917b",
+        "version" : "9.0.0"
       }
     },
     {
@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GEOSwift/GEOSwift.git",
       "state" : {
-        "revision" : "ab813f1acbd92986e8733356b73b3f6d4ddc08e0",
-        "version" : "9.0.0"
+        "revision" : "e42c062c2feb0df61373ae8cd6031a823a0dc981",
+        "version" : "11.0.0"
       }
     },
     {
@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/mapbox/turf-swift.git",
       "state" : {
-        "revision" : "87b5b37108ba9f37f0885b586d8f6355d8240dd8",
-        "version" : "2.6.1"
+        "revision" : "0ab7b51126bfa6560428323993cfdb3767c59060",
+        "version" : "3.1.0"
       }
     }
   ],
